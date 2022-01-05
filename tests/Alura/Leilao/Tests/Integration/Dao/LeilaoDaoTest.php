@@ -10,6 +10,27 @@ use PHPUnit\Framework\TestCase;
 
 class LeilaoDaoTest extends TestCase
 {
+    private static $pdo;
+
+    public static function setUpBeforeClass(): void
+    {
+        self::$pdo = new \PDO('sqlite: memory');
+        self::$pdo->exec('create table leiloes (
+                id INTEGER primary key,
+                descricao  TEXT,
+                finalizado BOOL,
+                dataInicio TEXT
+            );
+');
+    }
+
+    public function setUp(): void
+    {
+
+        self::$pdo->beginTransaction();
+    }
+    
+    
     /**
      * @throws \Exception
      */
@@ -17,8 +38,7 @@ class LeilaoDaoTest extends TestCase
     {
         // Montando o Cenário
       $leilao = new Leilao('Variante 0Km');
-      $pdo = ConnectionCreator::getConnection();
-      $leilaoDao = new LeilaoDao($pdo);
+      $leilaoDao = new LeilaoDao(self::$pdo);
       $leilaoDao->salva($leilao);
 
         // Agindo e garantindo que o Cenário esta ok
@@ -31,7 +51,10 @@ class LeilaoDaoTest extends TestCase
           'Variante 0Km',
           $leiloes[0]->recuperarDescricao()
       );
-        // Removendo o Cenário
-      $pdo->exec('DELETE FROM main.leiloes');
+    }
+
+    public function tearDown(): void
+    {
+        self::$pdo->rollBack();
     }
 }
